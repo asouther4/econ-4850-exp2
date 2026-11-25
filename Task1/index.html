@@ -35,17 +35,6 @@
         color: #777;
         font-size: 13px;
       }
-      table.dots-summary {
-        border-collapse: collapse;
-        margin: 0.5em 0 1em 0;
-        font-size: 16px;
-      }
-      table.dots-summary th,
-      table.dots-summary td {
-        border: 1px solid #999;
-        padding: 4px 14px;
-        text-align: center;
-      }
       /* the payment scheme, shown up front */
       .pay-box {
         border: 3px solid #000;
@@ -700,11 +689,6 @@ function showConfigProblems(path, problems) {
    BUILDING THE EXPERIMENT FROM THE CONFIG
    ========================================================================================== */
 
-/* every section this student meets, in order, as {part, block}; set by buildTimeline and
-   used for the summary on the end screen */
-var section_order = [];
-var n_parts = 1;
-
 /* Draw a state (an index into dp.states) from the prior. */
 function drawState(prior) {
   var u = Math.random();
@@ -884,7 +868,6 @@ function buildTimeline(config) {
   var parts = config.randomize_part_order ?
       jsPsych.randomization.shuffle(config.experiments) : config.experiments.slice();
   var P = parts.length;
-  n_parts = P;
 
   var orders = [];
   var total_sections = 0;
@@ -962,7 +945,6 @@ function buildTimeline(config) {
   ];
 
   var timeline = [welcome_block, uni_block];
-  section_order = [];
   var trial_number = 0;
 
   /* the session's practice question comes straight after the general instructions,
@@ -1057,7 +1039,6 @@ function buildTimeline(config) {
              trial: trial_number, block: b + 1, treatment: dp.id, rep: rep}));
       }
       timeline.push({timeline: questions});
-      section_order.push({part: P > 1 ? part_label : 1, block: b + 1});
     }
   }
 
@@ -1112,29 +1093,6 @@ function downloadText(text, filename) {
   link.remove();
 }
 
-/* how often the student chose an option that paid the most, section by section, for the
-   end screen */
-function summaryHTML() {
-  var rows = jsPsych.data.getTrialsOfType('dots-choice');
-  var html = '<p>Here is how often you chose the option that paid the most, given the ' +
-             'actual number of red dots:</p>' +
-             '<table class="dots-summary"><tr>' + (n_parts > 1 ? '<th>Part</th>' : '') +
-             '<th>Section</th><th>Best choices</th></tr>';
-  for (var k = 0; k < section_order.length; k++) {
-    var sec = section_order[k];
-    var n = 0, best = 0;
-    for (var r = 0; r < rows.length; r++) {
-      if (rows[r].phase === 'main' && rows[r].part === sec.part && rows[r].block === sec.block) {
-        n++;
-        best += rows[r].correct;
-      }
-    }
-    html += '<tr>' + (n_parts > 1 ? '<td>' + sec.part + '</td>' : '') +
-            '<td>' + sec.block + '</td><td>' + best + ' of ' + n + '</td></tr>';
-  }
-  return html + '</table>';
-}
-
 /* ==========================================================================================
    START: load the config file, check it, then run
    ========================================================================================== */
@@ -1167,7 +1125,6 @@ function runExperiment(config, config_path) {
         '<h2>Experiment complete</h2>' +
         '<p>Thank you for taking part. Your data file <strong>' + filename + '</strong> has ' +
         'been downloaded to your computer.</p>' +
-        summaryHTML() +
         '<p>After the deadline, one student who submitted their data file will be selected ' +
         'at random, and paid for one of their questions selected at random.</p>' +
 
