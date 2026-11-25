@@ -1,0 +1,56 @@
+{
+  "_about": "Dean & Neligh (2023), experiment 1.2 (Changing Incentives), with 10 questions per treatment instead of 50. Treatment ids follow the paper's numbering of the decision problems (DPs 3-6). Payoffs are dollars ($5, $40, $70, $95: the paper's probability points, read as dollars), and only one student is paid: one student is drawn at random, then one of their main questions. Settings whose names start with an underscore, like this one, are notes and are ignored.",
+
+  "n_treatments": 4,
+  "reps_per_treatment": 10,
+  "randomize_order": true,
+
+  "practice": {
+    "states": [49, 51],
+    "prior": [0.5, 0.5],
+    "actions": [
+      {"label": "A", "payoffs": {"49": 10, "51": 0}},
+      {"label": "B", "payoffs": {"49": 0, "51": 10}},
+      {"label": "C", "payoffs": {"49": 5, "51": 5}}
+    ]
+  },
+
+  "treatments": [
+    {
+      "id": "DP3",
+      "states": [49, 51],
+      "prior": [0.5, 0.5],
+      "actions": [
+        {"label": "A", "payoffs": {"49": 5, "51": 0}},
+        {"label": "B", "payoffs": {"49": 0, "51": 5}}
+      ]
+    },
+    {
+      "id": "DP4",
+      "states": [49, 51],
+      "prior": [0.5, 0.5],
+      "actions": [
+        {"label": "A", "payoffs": {"49": 40, "51": 0}},
+        {"label": "B", "payoffs": {"49": 0, "51": 40}}
+      ]
+    },
+    {
+      "id": "DP5",
+      "states": [49, 51],
+      "prior": [0.5, 0.5],
+      "actions": [
+        {"label": "A", "payoffs": {"49": 70, "51": 0}},
+        {"label": "B", "payoffs": {"49": 0, "51": 70}}
+      ]
+    },
+    {
+      "id": "DP6",
+      "states": [49, 51],
+      "prior": [0.5, 0.5],
+      "actions": [
+        {"label": "A", "payoffs": {"49": 95, "51": 0}},
+        {"label": "B", "payoffs": {"49": 0, "51": 95}}
+      ]
+    }
+  ]
+}

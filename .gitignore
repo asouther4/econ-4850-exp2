@@ -1,0 +1,8 @@
+# Problem set / course materials kept locally, not published with the experiment
+*.pdf
+
+# Student data files are uploaded to Courseworks, never committed to this public repo
+*.csv
+
+# Windows shortcuts are local to this computer
+*.lnk

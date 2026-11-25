@@ -1,0 +1,136 @@
+{
+  "_about": "Dean & Neligh (2023), experiments 1.2 (Changing Incentives) and 1.4 (Invariance under Compression), run one after the other as Part 1 and Part 2 of one session, with 2 questions per treatment (for testing) instead of 50. Payoffs are dollars, and only one student is paid: one student is drawn at random, then one of their main questions. Add &experiment=exp1.2 or &experiment=exp1.4 to the address to run only one of them. Settings whose names start with an underscore, like this one, are notes and are ignored.",
+
+  "experiments": [
+    {
+      "id": "exp1.2",
+      "_about": "Experiment 1.2. Two equally likely states, 49 and 51 red dots; action A pays R with 49 red dots and B pays R with 51. Treatment ids follow the paper's numbering of the decision problems (DPs 3-6), with R = $5, $40, $70 and $95 (the paper's probability points, read as dollars). Every number of red dots is its own payoff-relevant state, so there are no payoff_states and the payoffs are keyed by the number of red dots.",
+      "n_treatments": 4,
+      "reps_per_treatment": 2,
+      "randomize_order": true,
+
+      "practice": {
+        "states": [49, 51],
+        "prior": [0.5, 0.5],
+        "actions": [
+          {"label": "A", "payoffs": {"49": 10, "51": 0}},
+          {"label": "B", "payoffs": {"49": 0, "51": 10}},
+          {"label": "C", "payoffs": {"49": 5, "51": 5}}
+        ]
+      },
+
+      "treatments": [
+        {
+          "id": "DP3",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 5, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 5}}
+          ]
+        },
+        {
+          "id": "DP4",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 40, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 40}}
+          ]
+        },
+        {
+          "id": "DP5",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 70, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 70}}
+          ]
+        },
+        {
+          "id": "DP6",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 95, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 95}}
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "exp1.4",
+      "_about": "Experiment 1.4 (section III.E and figure 5 of the paper). N equally likely states centered on 50 red dots, N = 8, 12, 16 or 20 (47-54, 45-56, 43-58, 41-60). Action A pays in the lower half of the states, {1, ..., N/2}, which is 50 or fewer red dots, and B pays in the upper half, 51 or more. So there are only two payoff-relevant states, 'low' and 'high'. Treatment ids give N. A and B pay $10, as in the paper, which paid this experiment in cash. No practice question: the paper does not report one for this experiment. The wording of prior_description and instructions follows appendix A0 and the 'letters' treatment of appendix 5.4 ('Each letter has an equal probability of being the state letter').",
+      "n_treatments": 4,
+      "reps_per_treatment": 2,
+      "randomize_order": true,
+
+      "instructions": [
+        "In this part of the experiment there are many possible numbers of red dots. In each section you will be told the range that the number of red dots will be in, for example between 47 and 54 red dots. Each number of red dots in that range is equally likely, and there will never be a number of red dots outside it.",
+        "The options in this part do not depend on the exact number of red dots. They pay depending only on whether there are **50 or fewer red dots** on the screen or **51 or more red dots** on the screen. For example, an option that pays $10 if there are 51 or more red dots pays $10 whether there are 51, 52 or 54 red dots on the screen.",
+        "Since there are always 100 dots, there are 51 or more red dots exactly when there are more red dots than blue dots.",
+        "The sections in this part differ only in the range of possible numbers of red dots."
+      ],
+
+      "treatments": [
+        {
+          "id": "N8",
+          "states": [47, 48, 49, 50, 51, 52, 53, 54],
+          "prior": "uniform",
+          "prior_description": "There will be between 47 and 54 red dots on the screen, and each of these 8 numbers is equally likely (a 1 in 8 chance each).",
+          "payoff_states": [
+            {"id": "low",  "label": "50 or fewer red dots", "states": [47, 48, 49, 50]},
+            {"id": "high", "label": "51 or more red dots",  "states": [51, 52, 53, 54]}
+          ],
+          "actions": [
+            {"label": "A", "payoffs": {"low": 10, "high": 0}},
+            {"label": "B", "payoffs": {"low": 0, "high": 10}}
+          ]
+        },
+        {
+          "id": "N12",
+          "states": [45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56],
+          "prior": "uniform",
+          "prior_description": "There will be between 45 and 56 red dots on the screen, and each of these 12 numbers is equally likely (a 1 in 12 chance each).",
+          "payoff_states": [
+            {"id": "low",  "label": "50 or fewer red dots", "states": [45, 46, 47, 48, 49, 50]},
+            {"id": "high", "label": "51 or more red dots",  "states": [51, 52, 53, 54, 55, 56]}
+          ],
+          "actions": [
+            {"label": "A", "payoffs": {"low": 10, "high": 0}},
+            {"label": "B", "payoffs": {"low": 0, "high": 10}}
+          ]
+        },
+        {
+          "id": "N16",
+          "states": [43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58],
+          "prior": "uniform",
+          "prior_description": "There will be between 43 and 58 red dots on the screen, and each of these 16 numbers is equally likely (a 1 in 16 chance each).",
+          "payoff_states": [
+            {"id": "low",  "label": "50 or fewer red dots", "states": [43, 44, 45, 46, 47, 48, 49, 50]},
+            {"id": "high", "label": "51 or more red dots",  "states": [51, 52, 53, 54, 55, 56, 57, 58]}
+          ],
+          "actions": [
+            {"label": "A", "payoffs": {"low": 10, "high": 0}},
+            {"label": "B", "payoffs": {"low": 0, "high": 10}}
+          ]
+        },
+        {
+          "id": "N20",
+          "states": [41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60],
+          "prior": "uniform",
+          "prior_description": "There will be between 41 and 60 red dots on the screen, and each of these 20 numbers is equally likely (a 1 in 20 chance each).",
+          "payoff_states": [
+            {"id": "low",  "label": "50 or fewer red dots", "states": [41, 42, 43, 44, 45, 46, 47, 48, 49, 50]},
+            {"id": "high", "label": "51 or more red dots",  "states": [51, 52, 53, 54, 55, 56, 57, 58, 59, 60]}
+          ],
+          "actions": [
+            {"label": "A", "payoffs": {"low": 10, "high": 0}},
+            {"label": "B", "payoffs": {"low": 0, "high": 10}}
+          ]
+        }
+      ]
+    }
+  ]
+}

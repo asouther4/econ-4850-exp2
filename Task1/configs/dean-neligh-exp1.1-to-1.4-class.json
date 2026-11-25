@@ -1,0 +1,181 @@
+{
+  "_about": "Classroom version of Dean & Neligh (2023), experiments 1.1 to 1.4, run as Parts A-D of one session, in a random order for each student: 2 + 3 + 3 + 1 = 9 decision problems (DPs). Payoffs are dollars. Only one student is paid: after the deadline one student is drawn at random, then one of their main questions, and they are paid what their chosen option paid in it. reps_per_treatment is 2 in every part, for testing; raise it for the real run. Add &experiment=exp1.1 (etc.) to the address to run only some parts. Settings whose names start with an underscore, like this one, are notes and are ignored.",
+
+  "_about_randomize_part_order": "true: each student gets the four parts in a random order, and the sections within each part in a random order (each part's randomize_order). Parts are labelled A, B, C, D in the order the student meets them; the data file's experiment column says which experiment each row is from.",
+  "randomize_part_order": true,
+
+  "_about_practice": "The unpaid example question of appendix A0 (A 10/0, B 0/10, C 5/5 with 49 or 51 red dots). It comes after the general instructions and before Part A, whatever the order of the parts.",
+  "_about_overview_note": "Each experiment's overview_note is shown in bold at the bottom of the page listing its sections (the Part X Instructions page). They all follow one pattern: what the sections have in common, then what differs. {section:DP3} becomes the number of DP3's section in each student's (randomized) order.",
+
+  "practice": {
+    "states": [49, 51],
+    "prior": [0.5, 0.5],
+    "actions": [
+      {"label": "A", "payoffs": {"49": 10, "51": 0}},
+      {"label": "B", "payoffs": {"49": 0, "51": 10}},
+      {"label": "C", "payoffs": {"49": 5, "51": 5}}
+    ]
+  },
+
+  "experiments": [
+    {
+      "id": "exp1.1",
+      "_about": "Experiment 1.1 (section III.B and table 1 of the paper), both DPs. Two equally likely states, 49 and 51 red dots. DP1 = {a, b}: a pays 50 in both states, b pays b1 = 30 with 49 red dots and b2 = 52 with 51. DP2 = {a, b, c} adds c, which pays 100 with 49 red dots and 0 with 51. The paper ran four between-subject values of (b1, b2); this uses its treatment 4, (30, 52), which had the strongest aggregate monotonicity violation in table 2. The paper's probability points are read as dollars.",
+      "n_treatments": 2,
+      "reps_per_treatment": 2,
+      "randomize_order": true,
+
+      "instructions": [
+        "In this part of the experiment there will always be either **49 or 51 red dots** on the screen, and each is equally likely.",
+        "The sections in this part differ in which options you can choose from."
+      ],
+
+      "overview_note": "**As you can see, both sections have the same probabilities (49 or 51 red dots, each equally likely) and the same options A and B. The only difference is that Section {section:DP2} also has a third option, C, which pays $100 if there are 49 red dots and $0 if there are 51 red dots.**",
+
+      "treatments": [
+        {
+          "id": "DP1",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 50, "51": 50}},
+            {"label": "B", "payoffs": {"49": 30, "51": 52}}
+          ]
+        },
+        {
+          "id": "DP2",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 50, "51": 50}},
+            {"label": "B", "payoffs": {"49": 30, "51": 52}},
+            {"label": "C", "payoffs": {"49": 100, "51": 0}}
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "exp1.2",
+      "_about": "Experiment 1.2 (section III.C), with three of its four reward levels. Two equally likely states, 49 and 51 red dots; A pays R with 49 red dots and B pays R with 51, R = $5, $40 and $90. Treatment ids follow the paper's DP numbers for those rewards (DP3 = 5, DP4 = 40, DP6 = 90); DP5 (75) is dropped. Section III.C gives the rewards as 5, 40, 75, 90 (equation 2 and appendix A0 use 70 and 95); the top reward here is 90, as in section III.C.",
+      "n_treatments": 3,
+      "reps_per_treatment": 2,
+      "randomize_order": true,
+
+      "instructions": [
+        "In this part of the experiment there will always be either **49 or 51 red dots** on the screen, and each is equally likely.",
+        "In every section, one option pays if there are 49 red dots and the other pays if there are 51 red dots. The sections differ only in **how much** the options pay."
+      ],
+
+      "overview_note": "**As you can see, all 3 sections have the same probabilities (49 or 51 red dots, each equally likely) and the same two options: one pays if there are 49 red dots and the other pays if there are 51 red dots. The sections differ only in how much the options pay: $5 in Section {section:DP3}, $40 in Section {section:DP4} and $90 in Section {section:DP6}.**",
+
+      "treatments": [
+        {
+          "id": "DP3",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 5, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 5}}
+          ]
+        },
+        {
+          "id": "DP4",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 40, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 40}}
+          ]
+        },
+        {
+          "id": "DP6",
+          "states": [49, 51],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"49": 90, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 90}}
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "exp1.3",
+      "_about": "Experiment 1.3 (section III.D), with three of its four priors. Two states, 47 and 53 red dots; A pays $10 with 47 red dots and B pays $10 with 53, as in the paper (which paid this experiment in cash). The prior probability of 47 red dots is 0.5, 0.6 and 0.85. Treatment ids follow the paper's DP numbers for those priors (DP7 = 0.5, DP8 = 0.6, DP10 = 0.85); DP9 (0.75) is dropped.",
+      "n_treatments": 3,
+      "reps_per_treatment": 2,
+      "randomize_order": true,
+
+      "instructions": [
+        "In this part of the experiment there will always be either **47 or 53 red dots** on the screen.",
+        "In every section, one option pays $10 if there are 47 red dots and the other pays $10 if there are 53 red dots. The sections differ only in **how likely** each number of red dots is, so pay close attention to the probabilities at the start of each section."
+      ],
+
+      "overview_note": "**As you can see, all 3 sections have the same two options: one pays $10 if there are 47 red dots and the other pays $10 if there are 53 red dots. The sections differ only in how likely it is that there are 47 red dots: 50% in Section {section:DP7}, 60% in Section {section:DP8} and 85% in Section {section:DP10}.**",
+
+      "treatments": [
+        {
+          "id": "DP7",
+          "states": [47, 53],
+          "prior": [0.5, 0.5],
+          "actions": [
+            {"label": "A", "payoffs": {"47": 10, "53": 0}},
+            {"label": "B", "payoffs": {"47": 0, "53": 10}}
+          ]
+        },
+        {
+          "id": "DP8",
+          "states": [47, 53],
+          "prior": [0.6, 0.4],
+          "actions": [
+            {"label": "A", "payoffs": {"47": 10, "53": 0}},
+            {"label": "B", "payoffs": {"47": 0, "53": 10}}
+          ]
+        },
+        {
+          "id": "DP10",
+          "states": [47, 53],
+          "prior": [0.85, 0.15],
+          "actions": [
+            {"label": "A", "payoffs": {"47": 10, "53": 0}},
+            {"label": "B", "payoffs": {"47": 0, "53": 10}}
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "exp1.4",
+      "_about": "Experiment 1.4 (section III.E), the 8-state treatment only. 47-54 red dots, equally likely. A pays $10 with 50 or fewer red dots ('low', the paper's states {1, ..., N/2}) and B pays $10 with 51 or more ('high'), as in the paper, which paid $10 in cash. No practice question: the paper does not report one for this experiment.",
+      "n_treatments": 1,
+      "reps_per_treatment": 2,
+      "randomize_order": true,
+
+      "instructions": [
+        "In this part of the experiment there are many possible numbers of red dots: there will be **between 47 and 54 red dots** on the screen. Each number of red dots in that range is equally likely, and there will never be a number of red dots outside it.",
+        "The options in this part do not depend on the exact number of red dots. They pay depending only on whether there are **50 or fewer red dots** on the screen or **51 or more red dots** on the screen. For example, an option that pays $10 if there are 51 or more red dots pays $10 whether there are 51, 52 or 54 red dots on the screen.",
+        "Since there are always 100 dots, there are 51 or more red dots exactly when there are more red dots than blue dots."
+      ],
+
+      "overview_note": "**As you can see, in this section there will be between 47 and 54 red dots, each number equally likely, and the options pay depending only on whether there are 50 or fewer red dots or 51 or more red dots, not on the exact number of red dots.**",
+
+      "treatments": [
+        {
+          "id": "N8",
+          "states": [47, 48, 49, 50, 51, 52, 53, 54],
+          "prior": "uniform",
+          "prior_description": "There will be between 47 and 54 red dots on the screen, and each of these 8 numbers is equally likely (a 1 in 8 chance each).",
+          "payoff_states": [
+            {"id": "low",  "label": "50 or fewer red dots", "states": [47, 48, 49, 50]},
+            {"id": "high", "label": "51 or more red dots",  "states": [51, 52, 53, 54]}
+          ],
+          "actions": [
+            {"label": "A", "payoffs": {"low": 10, "high": 0}},
+            {"label": "B", "payoffs": {"low": 0, "high": 10}}
+          ]
+        }
+      ]
+    }
+  ]
+}

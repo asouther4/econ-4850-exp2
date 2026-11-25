@@ -1,0 +1,1239 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ECON 4850 - Experiment 2</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="jspsych-5.0/jspsych.js"></script>
+    <script src="jspsych-5.0/plugins/jspsych-text.js"></script>
+    <script src="jspsych-5.0/plugins/jspsych-survey-text.js"></script>
+    <script src="jspsych-5.0/plugins/jspsych-instructions.js"></script>
+    <script src="jspsych-5.0/plugins/jspsych-dots-choice.js"></script>
+    <link href="jspsych-5.0/css/jspsych.css" rel="stylesheet" type="text/css">
+    <style>
+      /* let the page shrink to a laptop window instead of forcing 1000px */
+      .jspsych-display-element {
+        width: auto;
+        max-width: 1000px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      .jspsych-btn {
+        font-size: 16px;
+        padding: 8px 18px;
+      }
+      .dots-page h2 {
+        margin: 0 0 0.5em 0;
+      }
+      .dots-page h3 {
+        margin: 1.2em 0 0.3em 0;
+      }
+      .dots-page p.dots-prior-text {
+        margin: 0.25em 0 0.5em 0;
+      }
+      .dots-small {
+        color: #777;
+        font-size: 13px;
+      }
+      table.dots-summary {
+        border-collapse: collapse;
+        margin: 0.5em 0 1em 0;
+        font-size: 16px;
+      }
+      table.dots-summary th,
+      table.dots-summary td {
+        border: 1px solid #999;
+        padding: 4px 14px;
+        text-align: center;
+      }
+      /* the payment scheme, shown up front */
+      .pay-box {
+        border: 3px solid #000;
+        background: #f2f2f2;
+        border-radius: 4px;
+        padding: 6px 18px;
+        margin: 1em 0;
+      }
+      .pay-box h3 {
+        margin-top: 0.6em;
+      }
+      #config-error {
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      #config-error li {
+        margin-bottom: 0.5em;
+      }
+    </style>
+  </head>
+  <body>
+  <p id="loading" class="dots-page" style="margin-top: 24px; color: #777;">Loading&hellip;</p>
+  <script>
+
+/* ==========================================================================================
+   The "red dots" task of Dean & Neligh (2023), "Experimental Tests of Rational Inattention,"
+   Journal of Political Economy 131(12).
+
+   Every question shows 100 dots, some red and some blue. The true state is the number of
+   red dots. The student is told how likely each state is (the prior) and then chooses an
+   action, whose payoff in dollars depends on the state. Each true state belongs
+   to one payoff-relevant state, and an action pays the same in every true state of a
+   payoff-relevant state: in experiment 1.2 each number of red dots is its own payoff-
+   relevant state, while in experiment 1.4 the only thing that matters is whether there are
+   50 or fewer red dots or 51 or more. Questions come in sections, one per treatment (a
+   decision problem, or DP, in the paper), with every question in a section drawn from the
+   same treatment. No feedback is given after a question.
+
+   Payment: after the deadline, one student is picked at random, then one of that student's
+   questions, and the student is paid what their chosen option paid in that question. The
+   instructions say so up front (paymentPage).
+
+   The design is not written here. It is read from a JSON file in configs/: one or more
+   experiments, each run as one part of the session. An experiment gives how
+   many questions each treatment gets, whether the order of its sections is shuffled, an
+   optional practice question, optional instructions of its own, and for each treatment its
+   states, prior, payoff-relevant states and actions, plus optional wording that replaces
+   the list of probabilities. README.md describes the format.
+   ========================================================================================== */
+
+/* ==========================================================================================
+   TA SETTINGS
+   ========================================================================================== */
+
+/* The design everyone gets. A single link can use a different file by adding ?config=...
+   to the address, e.g.  https://<username>.github.io/econ-4850-exp2/Task1/?config=configs/other.json
+   and can run only some of the file's experiments by adding &experiment=<id>. */
+var CONFIG_FILE = 'configs/dean-neligh-exp1.1-to-1.4-class.json';
+
+var N_DOTS = 100;   // dots on every screen (the instructions say 100)
+
+/* ==========================================================================================
+   UNI
+   ========================================================================================== */
+
+/* Any string of letters and numbers is accepted. The entry is normalized (everything that
+   is not a letter or digit is dropped, the rest lowercased) so that no stray whitespace or
+   punctuation reaches the data file or its name; a blank entry simply re-asks. */
+var uni_code = '';
+var uni_attempts = 0;
+var uni_normalize = function(raw) { return String(raw).replace(/[^a-zA-Z0-9]/g, '').toLowerCase(); };
+var uni_is_valid = function(code) { return code.length > 0; };
+
+/* Once a student has started, leaving or reloading the page throws their answers away, so
+   the browser is asked to confirm first. The warning is removed when the experiment ends. */
+function warnBeforeLeaving(e) {
+  e.preventDefault();
+  e.returnValue = '';
+  return '';
+}
+
+var uni_trial = {
+    type: "survey-text",
+    questions: ["Enter your UNI in the box below and press submit to begin."],
+    preamble: function() {
+      if (uni_attempts === 0) { return ""; }
+      return '<p style="color:#a00;"><strong>Please enter your UNI before continuing.</strong></p>';
+    },
+    rows: [1],
+    columns: [10],
+    on_finish: function(trial_data){
+      var responses = JSON.parse(trial_data.responses);
+      uni_code = uni_normalize(responses.Q0);
+      uni_attempts = uni_attempts + 1;
+      jsPsych.data.addProperties({uni_code: uni_code});
+      if (uni_is_valid(uni_code)) {
+        window.addEventListener('beforeunload', warnBeforeLeaving);
+      }
+    }
+};
+
+var uni_block = {
+    timeline: [uni_trial],
+    loop_function: function(){ return !uni_is_valid(uni_code); }
+};
+
+/* ==========================================================================================
+   SMALL HELPERS
+   ========================================================================================== */
+
+var dots = jsPsych.plugins['dots-choice'];   // drawing helpers shared with the instructions
+
+/* text from the config file is shown as text, never as HTML */
+function escapeHTML(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* Wording written in the config file ("instructions", "prior_description") is shown as
+   text, except that **...** is shown in bold. */
+function formatText(s) {
+  return escapeHTML(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+/* one <p> per piece of text */
+function paragraphsHTML(list, cls) {
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    html += '<p' + (cls ? ' class="' + cls + '"' : '') + '>' + formatText(list[i]) + '</p>';
+  }
+  return html;
+}
+
+function plural(n, word) {
+  return n + ' ' + word + (n === 1 ? '' : 's');
+}
+
+/* "a", "a and b", "a, b, and c" */
+function joinList(items) {
+  if (items.length <= 2) { return items.join(' and '); }
+  return items.slice(0, -1).join(', ') + ', and ' + items[items.length - 1];
+}
+
+/* The default name of a payoff-relevant state, from the numbers of red dots in it:
+   "49 red dots", "49 or 50 red dots", "between 47 and 50 red dots", "47, 49 or 51 red dots".
+   It completes the sentence "Pay if there are ...". */
+function describeRedCounts(counts) {
+  var n = counts.slice().sort(function(a, b) { return a - b; });
+  if (n.length === 1) { return plural(n[0], 'red dot'); }
+  if (n.length > 2 && n[n.length - 1] - n[0] === n.length - 1) {
+    return 'between ' + n[0] + ' and ' + n[n.length - 1] + ' red dots';
+  }
+  return n.slice(0, -1).join(', ') + ' or ' + n[n.length - 1] + ' red dots';
+}
+
+function page(title, body) {
+  return '<div class="dots-page"><h2>' + title + '</h2>' + body + '</div>';
+}
+
+/* instruction screens all use Next/Previous buttons; arrow keys are switched off so a
+   stray key press cannot skip a page */
+function pagesBlock(pages, allow_backward) {
+  return {
+    type: 'instructions',
+    pages: pages,
+    show_clickable_nav: true,
+    allow_backward: allow_backward,
+    allow_keys: false
+  };
+}
+
+/* ==========================================================================================
+   READING THE CONFIG FILE
+   readConfig checks everything in the file and returns either the design, in the form the
+   rest of the page uses, or a list of every problem it found, so that a mistake in the
+   file stops the experiment with a clear message instead of producing a broken one.
+   Settings whose names start with an underscore are notes and are ignored.
+   ========================================================================================== */
+
+var TOP_KEYS = ['experiments', 'randomize_part_order', 'practice'];
+var EXPERIMENT_KEYS = ['id', 'instructions', 'overview_note', 'n_treatments',
+                       'reps_per_treatment', 'randomize_order', 'practice', 'treatments'];
+
+/* In "overview_note", {section:DP3} stands for the number of the section that treatment DP3
+   is in, in this student's order of the sections. */
+var SECTION_PLACEHOLDER = /\{section:([^}]*)\}/g;
+var DP_KEYS = ['states', 'prior', 'prior_description', 'payoff_states', 'actions'];
+var PAYOFF_STATE_KEYS = ['id', 'states', 'label'];
+var ACTION_KEYS = ['label', 'payoffs'];
+
+function readConfig(raw) {
+  var problems = [];
+
+  function show(x) { return escapeHTML(JSON.stringify(x)); }
+  function isObject(x) { return x !== null && typeof x === 'object' && !$.isArray(x); }
+  function isWhole(x) { return typeof x === 'number' && isFinite(x) && Math.floor(x) === x; }
+  function isId(x) { return (typeof x === 'string' && $.trim(x) !== '') || isWhole(x); }
+
+  function checkKeys(obj, allowed, where) {
+    for (var key in obj) {
+      if (obj.hasOwnProperty(key) && key.charAt(0) !== '_' && $.inArray(key, allowed) < 0) {
+        problems.push(where + ' has a setting called ' + show(key) + ', which is not one of ' +
+                      'the allowed settings (' + allowed.join(', ') + '). Is it misspelled?');
+      }
+    }
+  }
+
+  /* A piece of text, or a list of them (one per paragraph). Returns the list, or null. */
+  function readText(value, where, name) {
+    var list = (typeof value === 'string') ? [value] : value;
+    var ok = $.isArray(list) && list.length > 0;
+    for (var i = 0; ok && i < list.length; i++) {
+      if (typeof list[i] !== 'string' || $.trim(list[i]) === '') { ok = false; }
+    }
+    if (!ok) {
+      problems.push(where + ': "' + name + '" must be a piece of text, or a list of pieces ' +
+                    'of text (one per paragraph).');
+      return null;
+    }
+    return list;
+  }
+
+  /* One decision problem -- a treatment, or a practice question. Returns
+       states      the true states (numbers of red dots)
+       prior       the probability of each true state
+       prior_text  the config's "prior_description" as a list of paragraphs, or null
+       columns     the payoff-relevant states, in table order: {id, label, members}, where
+                   members are the numbers of red dots in it
+       column_of   column_of[s] is the index in columns of the payoff state of states[s]
+       options     the actions: {label, pay}, where pay[c] is the payoff in columns[c]
+     or null if anything is wrong. */
+  function readDP(dp, where, allowed) {
+    var before = problems.length;
+    if (!isObject(dp)) {
+      problems.push(where + ' must be an object, {...}.');
+      return null;
+    }
+    checkKeys(dp, allowed, where);
+    var before_states = problems.length;
+
+    var states = dp.states;
+    if (!$.isArray(states) || states.length === 0) {
+      problems.push(where + ': "states" must be a list of numbers of red dots, e.g. [49, 51].');
+      return null;
+    }
+    for (var s = 0; s < states.length; s++) {
+      if (!isWhole(states[s]) || states[s] < 0 || states[s] > N_DOTS) {
+        problems.push(where + ': in "states", ' + show(states[s]) + ' is not a whole number ' +
+                      'of red dots from 0 to ' + N_DOTS + '.');
+      } else if ($.inArray(states[s], states) !== s) {
+        problems.push(where + ': "states" lists ' + states[s] + ' more than once.');
+      }
+    }
+    if (problems.length > before_states) { return null; }   // the rest is checked against the states
+
+    /* the prior, over the true states */
+    var prior = dp.prior;
+    if (prior === 'uniform') {
+      prior = [];
+      for (var u = 0; u < states.length; u++) { prior.push(1 / states.length); }
+    } else if (!$.isArray(prior) || prior.length !== states.length) {
+      problems.push(where + ': "prior" must be a list with one probability for each state, ' +
+                    'in the same order as "states" (' + states.length + ' here), or ' +
+                    '"uniform" if every state is equally likely.');
+    } else {
+      var total = 0, prior_ok = true;
+      for (var p = 0; p < prior.length; p++) {
+        if (typeof prior[p] !== 'number' || !(prior[p] >= 0 && prior[p] <= 1)) {
+          problems.push(where + ': in "prior", ' + show(prior[p]) + ' is not a probability ' +
+                        'from 0 to 1.');
+          prior_ok = false;
+        } else {
+          total += prior[p];
+        }
+      }
+      if (prior_ok && Math.abs(total - 1) > 1e-6) {
+        problems.push(where + ': the probabilities in "prior" add up to ' +
+                      Math.round(total * 1e6) / 1e6 + ', not 1.');
+      }
+    }
+
+    var prior_text = null;
+    if (typeof dp.prior_description !== 'undefined') {
+      prior_text = readText(dp.prior_description, where, 'prior_description');
+    }
+
+    /* the payoff-relevant states. Without "payoff_states", every true state is its own
+       payoff-relevant state, and the actions' payoffs are keyed by the number of red dots. */
+    var grouped = (typeof dp.payoff_states !== 'undefined');
+    var columns = [];
+    var column_of = [];
+    var before_columns = problems.length;
+    if (!grouped) {
+      for (var t = 0; t < states.length; t++) {
+        columns.push({id: String(states[t]), label: plural(states[t], 'red dot'),
+                      members: [states[t]]});
+        column_of.push(t);
+      }
+    } else if (!$.isArray(dp.payoff_states) || dp.payoff_states.length === 0) {
+      problems.push(where + ': "payoff_states" must be a list of payoff-relevant states, ' +
+                    '[{"id": "low", "states": [47, 48, 49, 50]}, ...].');
+    } else {
+      for (var g = 0; g < dp.payoff_states.length; g++) {
+        var ps = dp.payoff_states[g];
+        var pw = where + ', payoff state ' + (g + 1);
+        if (!isObject(ps)) {
+          problems.push(pw + ' must be an object, {"id": ..., "states": [...]}.');
+          continue;
+        }
+        checkKeys(ps, PAYOFF_STATE_KEYS, pw);
+        if (!isId(ps.id)) {
+          problems.push(pw + ': "id" must be a piece of text, e.g. "low". The actions\' ' +
+                        '"payoffs" use it to give the payoff in this payoff state.');
+        } else {
+          for (var h = 0; h < columns.length; h++) {
+            if (columns[h].id === String(ps.id)) {
+              problems.push(where + ': two payoff states have the id ' + show(ps.id) + '.');
+            }
+          }
+        }
+        if (typeof ps.label !== 'undefined' &&
+            (typeof ps.label !== 'string' || $.trim(ps.label) === '')) {
+          problems.push(pw + ': "label" must be a piece of text that completes "Pay if there ' +
+                        'are ...", e.g. "50 or fewer red dots".');
+        }
+        if (!$.isArray(ps.states) || ps.states.length === 0) {
+          problems.push(pw + ': "states" must be a list of the numbers of red dots that ' +
+                        'belong to this payoff state, e.g. [47, 48, 49, 50].');
+          continue;
+        }
+        var members = [];
+        for (var m = 0; m < ps.states.length; m++) {
+          var k = $.inArray(ps.states[m], states);
+          if (k < 0) {
+            problems.push(pw + ': ' + show(ps.states[m]) + ' is not one of the numbers of red ' +
+                          'dots listed in "states".');
+          } else if (typeof column_of[k] !== 'undefined') {
+            problems.push(where + ': the state with ' + states[k] + ' red dots is listed more ' +
+                          'than once under "payoff_states". Each state belongs to exactly one ' +
+                          'payoff state.');
+          } else {
+            column_of[k] = columns.length;
+            members.push(states[k]);
+          }
+        }
+        columns.push({id: String(ps.id),
+                      label: (typeof ps.label === 'string') ? ps.label :
+                             (members.length ? describeRedCounts(members) : ''),
+                      members: members});
+      }
+      for (var v = 0; v < states.length; v++) {
+        if (typeof column_of[v] === 'undefined') {
+          problems.push(where + ': the state with ' + states[v] + ' red dots is not in any of ' +
+                        'the "payoff_states". Each state belongs to exactly one payoff state.');
+        }
+      }
+    }
+    if (problems.length > before_columns) { return null; }   // the actions are checked against them
+
+    var col_ids = $.map(columns, function(c) { return c.id; });
+    function columnName(c) {
+      return grouped ? 'the payoff state ' + show(columns[c].id) :
+                       'the state with ' + columns[c].members[0] + ' red dots';
+    }
+
+    var actions = dp.actions;
+    var options = [];
+    if (!$.isArray(actions) || actions.length < 2) {
+      problems.push(where + ': "actions" must be a list of at least two actions.');
+    } else {
+      for (var a = 0; a < actions.length; a++) {
+        var act = actions[a];
+        var at = where + ', action ' + (a + 1);
+        if (!isObject(act)) {
+          problems.push(at + ' must be an object, {"label": ..., "payoffs": {...}}.');
+          continue;
+        }
+        checkKeys(act, ACTION_KEYS, at);
+
+        if (typeof act.label !== 'string' || $.trim(act.label) === '') {
+          problems.push(at + ': "label" must be a piece of text, e.g. "A".');
+        } else {
+          for (var b = 0; b < a; b++) {
+            if (isObject(actions[b]) && actions[b].label === act.label) {
+              problems.push(where + ': two actions have the label ' + show(act.label) + '.');
+            }
+          }
+        }
+
+        var payoffs = act.payoffs;
+        if (!isObject(payoffs)) {
+          problems.push(at + ': "payoffs" must give the payoff in each ' + (grouped ?
+                        'payoff state, keyed by its "id", e.g. {"low": 10, "high": 0}.' :
+                        'state, e.g. {"49": 70, "51": 0}.'));
+          continue;
+        }
+        var pay = [];
+        for (var c = 0; c < columns.length; c++) {
+          var val = payoffs[col_ids[c]];
+          if (typeof val === 'undefined') {
+            problems.push(at + ': "payoffs" has no payoff for ' + columnName(c) + '.');
+          } else if (typeof val !== 'number' || !isFinite(val) || !(val >= 0)) {
+            problems.push(at + ': the payoff for ' + columnName(c) + ', ' + show(val) +
+                          ', is not an amount of dollars, 0 or more. Payoffs are dollars, ' +
+                          'written as plain numbers, e.g. 40 for $40.');
+          } else if (Math.abs(val * 100 - Math.round(val * 100)) > 1e-9) {
+            problems.push(at + ': the payoff for ' + columnName(c) + ', ' + show(val) +
+                          ', is not a whole number of cents.');
+          }
+          pay.push(val);
+        }
+        for (var key in payoffs) {
+          if (payoffs.hasOwnProperty(key) && $.inArray(key, col_ids) < 0) {
+            problems.push(at + ': "payoffs" has a payoff for ' + show(key) + ', which is not ' +
+                          (grouped ? 'the id of one of the "payoff_states".' :
+                                     'one of the numbers of red dots in "states".'));
+          }
+        }
+        options.push({label: act.label, pay: pay});
+      }
+    }
+
+    if (problems.length > before) { return null; }
+    return {states: states, prior: prior, prior_text: prior_text, columns: columns,
+            column_of: column_of, options: options};
+  }
+
+  /* One experiment: one part of the session. `where` names it in messages; `single` is
+     true when its settings are at the top level of the file. */
+  function readExperiment(ex, where, index, single) {
+    var before = problems.length;
+    var out = {};
+
+    var id = (typeof ex.id !== 'undefined') ? ex.id : 'E' + (index + 1);
+    if (!isId(id)) {
+      problems.push(where + ': "id" must be a piece of text, e.g. "exp1.4", or a whole number.');
+    }
+    out.id = String(id);
+
+    out.instructions = null;
+    if (typeof ex.instructions !== 'undefined') {
+      out.instructions = readText(ex.instructions, where, 'instructions');
+    }
+
+    out.overview_note = null;
+    if (typeof ex.overview_note !== 'undefined') {
+      out.overview_note = readText(ex.overview_note, where, 'overview_note');
+    }
+
+    var prefix = single ? '' : where + ': ';
+    if (!isWhole(ex.reps_per_treatment) || ex.reps_per_treatment < 1) {
+      problems.push(prefix + '"reps_per_treatment" must be a whole number, 1 or more.');
+    }
+    out.reps = ex.reps_per_treatment;
+
+    if (typeof ex.randomize_order === 'undefined') {
+      out.randomize_order = true;
+    } else if (typeof ex.randomize_order !== 'boolean') {
+      problems.push(prefix + '"randomize_order" must be true or false (without quotation marks).');
+    } else {
+      out.randomize_order = ex.randomize_order;
+    }
+
+    out.practice = null;
+    if (typeof ex.practice !== 'undefined' && ex.practice !== null) {
+      out.practice = readDP(ex.practice, single ? 'The practice question' :
+                            where + ', practice question', DP_KEYS);
+    }
+
+    if (typeof ex.n_treatments !== 'undefined' &&
+        (!isWhole(ex.n_treatments) || ex.n_treatments < 1)) {
+      problems.push(prefix + '"n_treatments" must be a whole number, 1 or more.');
+    }
+
+    out.treatments = [];
+    if (!$.isArray(ex.treatments) || ex.treatments.length === 0) {
+      problems.push(prefix + '"treatments" must be a list of treatments, [{...}, {...}].');
+    } else {
+      if (isWhole(ex.n_treatments) && ex.n_treatments !== ex.treatments.length) {
+        problems.push(prefix + '"n_treatments" is ' + ex.n_treatments + ', but ' +
+                      plural(ex.treatments.length, 'treatment') +
+                      (ex.treatments.length === 1 ? ' is' : ' are') + ' listed under "treatments".');
+      }
+      var ids = [];
+      for (var i = 0; i < ex.treatments.length; i++) {
+        var tr = ex.treatments[i];
+        var has_id = isObject(tr) && typeof tr.id !== 'undefined';
+        var tid = has_id ? tr.id : 'T' + (i + 1);
+        var tw = (single ? 'Treatment ' : where + ', treatment ') + (i + 1) +
+                 (has_id ? ' (' + show(tr.id) + ')' : '');
+        if (!isId(tid)) {
+          problems.push(tw + ': "id" must be a piece of text, e.g. "DP3", or a whole number.');
+        } else if ($.inArray(String(tid), ids) >= 0) {
+          problems.push(tw + ': another treatment already has the id ' + show(tid) + '.');
+        }
+        ids.push(String(tid));
+        var dp = readDP(tr, tw, ['id'].concat(DP_KEYS));
+        if (dp !== null) {
+          dp.id = String(tid);
+          out.treatments.push(dp);
+        }
+      }
+    }
+
+    /* every {section:...} in overview_note must name one of this experiment's treatments */
+    if (out.overview_note && $.isArray(ex.treatments)) {
+      var tids = [];
+      for (var n = 0; n < ex.treatments.length; n++) {
+        var t_n = ex.treatments[n];
+        tids.push(String(isObject(t_n) && typeof t_n.id !== 'undefined' ? t_n.id : 'T' + (n + 1)));
+      }
+      for (var q = 0; q < out.overview_note.length; q++) {
+        out.overview_note[q].replace(SECTION_PLACEHOLDER, function(whole, tid) {
+          if ($.inArray(tid, tids) < 0) {
+            problems.push(prefix + '"overview_note" has ' + show(whole) + ', but this ' +
+                          'experiment has no treatment with the id ' + show(tid) + '. Its ' +
+                          'treatments are: ' + show(tids) + '.');
+          }
+          return whole;
+        });
+      }
+    }
+
+    return (problems.length > before) ? null : out;
+  }
+
+  if (!isObject(raw)) {
+    return {problems: ['The file must hold one JSON object, {...}.']};
+  }
+
+  var config = {};
+
+  /* Older files named a prize that probability points were a chance of winning. Payoffs
+     are now dollars paid directly, so the setting has no meaning any more. */
+  if (typeof raw.prize !== 'undefined') {
+    problems.push('The file has a setting called "prize", which is no longer used: payoffs ' +
+                  'are now amounts of dollars, paid directly. Remove "prize", and check that ' +
+                  'the payoffs are in dollars.');
+  }
+
+  config.experiments = [];
+  config.randomize_part_order = false;
+  config.practice = null;
+  if (typeof raw.experiments === 'undefined') {
+    /* a file with a single experiment can give its settings at the top level */
+    checkKeys(raw, ['prize'].concat(EXPERIMENT_KEYS), 'The file');
+    var only = readExperiment(raw, 'The file', 0, true);
+    if (only !== null) { config.experiments.push(only); }
+  } else {
+    checkKeys(raw, ['prize'].concat(TOP_KEYS), 'The file');
+
+    /* shuffle the order of the parts for each student (block randomization) */
+    if (typeof raw.randomize_part_order !== 'undefined') {
+      if (typeof raw.randomize_part_order !== 'boolean') {
+        problems.push('"randomize_part_order" must be true or false (without quotation marks).');
+      } else {
+        config.randomize_part_order = raw.randomize_part_order;
+      }
+    }
+
+    /* an example question for the whole session, asked after the general instructions and
+       before the first part, whatever order the parts are in */
+    if (typeof raw.practice !== 'undefined' && raw.practice !== null) {
+      config.practice = readDP(raw.practice, 'The practice question', DP_KEYS);
+    }
+
+    if (!$.isArray(raw.experiments) || raw.experiments.length === 0) {
+      problems.push('"experiments" must be a list of experiments, [{...}, {...}].');
+    } else {
+      var ex_ids = [];
+      for (var e = 0; e < raw.experiments.length; e++) {
+        var ex = raw.experiments[e];
+        var ew = 'Experiment ' + (e + 1) +
+                 (isObject(ex) && typeof ex.id !== 'undefined' ? ' (' + show(ex.id) + ')' : '');
+        if (!isObject(ex)) {
+          problems.push(ew + ' must be an object, {...}.');
+          continue;
+        }
+        checkKeys(ex, EXPERIMENT_KEYS, ew);
+        if (typeof ex.id !== 'undefined' && $.inArray(String(ex.id), ex_ids) >= 0) {
+          problems.push(ew + ': another experiment already has the id ' + show(ex.id) + '.');
+        }
+        var read = readExperiment(ex, ew, e, false);
+        if (read !== null) {
+          config.experiments.push(read);
+        }
+        ex_ids.push(typeof ex.id !== 'undefined' ? String(ex.id) : 'E' + (e + 1));
+      }
+    }
+  }
+
+  return {config: config, problems: problems};
+}
+
+/* Which config file to load: CONFIG_FILE, unless the address names another with
+   ?config=. Only a plain path on this site is accepted, because the file's text ends up on
+   the page. */
+function chooseConfigFile() {
+  var requested = jsPsych.data.getURLVariable('config');
+  if (typeof requested === 'undefined' || requested === '') {
+    return {path: CONFIG_FILE};
+  }
+  if (!/^[A-Za-z0-9_\-.\/]+\.json$/.test(requested) || requested.indexOf('//') === 0) {
+    return {path: requested,
+            problem: 'The address asks for the config file ' + escapeHTML(JSON.stringify(requested)) +
+                     ', but ?config= must be the path of a .json file on this site, relative ' +
+                     'to this page, e.g. ?config=configs/my-design.json.'};
+  }
+  return {path: requested};
+}
+
+/* Which of the file's experiments to run: all of them, in file order, unless the address
+   names some with experiment=<id> (several ids separated by commas run in that order,
+   unless the file sets randomize_part_order, which shuffles them).
+   Returns {experiments} or {problem}. */
+function chooseExperiments(experiments) {
+  var requested = jsPsych.data.getURLVariable('experiment');
+  if (typeof requested === 'undefined' || requested === '') {
+    return {experiments: experiments};
+  }
+  var ids = $.map(experiments, function(x) { return x.id; });
+  var wanted = requested.split(',');
+  var chosen = [];
+  for (var i = 0; i < wanted.length; i++) {
+    var k = $.inArray(wanted[i], ids);
+    if (k < 0) {
+      return {problem: 'The address asks for the experiment ' +
+              escapeHTML(JSON.stringify(wanted[i])) + ', but the config file has no ' +
+              'experiment with that id. Its experiments are: ' +
+              escapeHTML($.map(ids, function(x) { return JSON.stringify(x); }).join(', ')) + '.'};
+    }
+    chosen.push(experiments[k]);
+  }
+  return {experiments: chosen};
+}
+
+function showConfigProblems(path, problems) {
+  var items = '';
+  for (var i = 0; i < problems.length; i++) { items += '<li>' + problems[i] + '</li>'; }
+  $('body').html(
+    '<div class="dots-page" id="config-error">' +
+    '<h2>The experiment could not start</h2>' +
+    '<p>There is a problem with the experiment&rsquo;s configuration file, <code>' +
+    escapeHTML(path) + '</code>:</p>' +
+    '<ul>' + items + '</ul>' +
+    '<p class="dots-small">If you are a student, please contact the TA.</p>' +
+    '</div>'
+  );
+}
+
+/* ==========================================================================================
+   BUILDING THE EXPERIMENT FROM THE CONFIG
+   ========================================================================================== */
+
+/* every section this student meets, in order, as {part, block}; set by buildTimeline and
+   used for the summary on the end screen */
+var section_order = [];
+var n_parts = 1;
+
+/* Draw a state (an index into dp.states) from the prior. */
+function drawState(prior) {
+  var u = Math.random();
+  var cum = 0;
+  var last = 0;
+  for (var s = 0; s < prior.length; s++) {
+    if (prior[s] > 0) {
+      last = s;
+      cum += prior[s];
+      if (u < cum) { return s; }
+    }
+  }
+  return last;   // u landed in the rounding gap just below 1
+}
+
+/* What students are told about how likely each number of red dots is: the config's
+   "prior_description" if it has one, otherwise one bullet point per state. */
+function reminderHTML(dp) {
+  if (dp.prior_text) { return paragraphsHTML(dp.prior_text, 'dots-prior-text'); }
+  return dots.priorHTML(dp.states, dp.prior);
+}
+
+/* the header of each column of the table of options, one per payoff-relevant state */
+function columnHeaders(dp) {
+  return $.map(dp.columns, function(c) { return 'Pay if there are ' + c.label; });
+}
+
+function optionsTableHTML(dp, options, opts) {
+  return dots.tableHTML(columnHeaders(dp), options || dp.options, opts);
+}
+
+/* One question of decision problem `dp`. The state is drawn independently for every
+   question, as the instructions tell students; the red dots are scattered at random. */
+function makeQuestion(dp, title, data) {
+  var s = drawState(dp.prior);
+  var col = dp.column_of[s];
+  var layout = dots.randomLayout(dp.states[s], N_DOTS);
+  data.n_red = dp.states[s];
+  data.state = s + 1;
+  data.payoff_state = dp.columns[col].id;
+  data.dot_layout = layout;
+  return {
+    type: 'dots-choice',
+    layout: layout,
+    reminder: reminderHTML(dp),
+    columns: columnHeaders(dp),
+    options: dp.options,
+    pay_column: col,
+    title: title,
+    timing_post_trial: 500,
+    data: data
+  };
+}
+
+/* The sentences under the example table of options, e.g. "In this case, if you chose
+   option A (and this question was the one selected for payment), then you would get $10 if
+   there were 49 red dots on the screen and $0 if there were 51 red dots." Each action's
+   payoffs are listed from highest to lowest. */
+function describeOptions(dp) {
+  var sentences = [];
+  for (var i = 0; i < dp.options.length; i++) {
+    var opt = dp.options[i];
+    var lead = (i === 0) ?
+        'In this case, if you chose option ' + escapeHTML(opt.label) + ' (and this question ' +
+        'was the one selected for payment), then you would' :
+        'If you chose option ' + escapeHTML(opt.label) + ', you would';
+
+    var cases = [];
+    var constant = true;
+    for (var c = 0; c < dp.columns.length; c++) {
+      cases.push({label: dp.columns[c].label, pay: opt.pay[c], order: c});
+      if (opt.pay[c] !== opt.pay[0]) { constant = false; }
+    }
+
+    if (constant && dp.columns.length > 1) {
+      sentences.push(lead + ' receive ' + dots.money(opt.pay[0]) +
+                     ' regardless of the number of red dots on the screen.');
+    } else {
+      cases.sort(function(x, y) { return (y.pay - x.pay) || (x.order - y.order); });
+      var parts = [];
+      for (var k = 0; k < cases.length; k++) {
+        parts.push(dots.money(cases[k].pay) + ' if there were ' +
+                   escapeHTML(cases[k].label) + (k === 0 ? ' on the screen' : ''));
+      }
+      sentences.push(lead + ' get ' + joinList(parts) + '.');
+    }
+  }
+  return '<p>' + sentences.join(' ') + '</p>';
+}
+
+/* "Each section will consist of 10 questions." */
+function questionsPerSection(experiments) {
+  var lo = experiments[0].reps, hi = experiments[0].reps;
+  for (var i = 1; i < experiments.length; i++) {
+    lo = Math.min(lo, experiments[i].reps);
+    hi = Math.max(hi, experiments[i].reps);
+  }
+  return (lo === hi) ? 'Each section will consist of ' + plural(lo, 'question') + '.' :
+                       'Each section will consist of between ' + lo + ' and ' + hi + ' questions.';
+}
+
+/* The screen after a practice question, showing what it would have paid. */
+function practicePaymentBlock(practice) {
+  return pagesBlock(function() {
+    var done = jsPsych.data.getTrialsOfType('dots-choice');
+    var last = done[done.length - 1];
+    var chosen = 0;
+    for (var i = 0; i < practice.options.length; i++) {
+      if (practice.options[i].label === last.choice) { chosen = i; }
+    }
+    var col = practice.columns[practice.column_of[last.state - 1]];
+    return [page('Instructions',
+      '<h3>Example Payment</h3>' +
+      '<p>For this question, you chose the following option:</p>' +
+      optionsTableHTML(practice, [practice.options[chosen]], {checked: 0}) +
+      '<p>There were ' + last.n_red + ' red dots on the screen' +
+      (col.members.length > 1 ? ' (so there were ' + escapeHTML(col.label) + ')' : '') + '.</p>' +
+      '<p>If you were the student selected for payment, and this had been a real question ' +
+      'that was selected, you would have been paid ' + dots.money(last.payoff) + '.</p>')];
+  }, false);
+}
+
+/* ---------------- payment: one student, then one of their questions ---------------------
+   This is a classroom experiment, so only one student is paid. After the deadline the TA
+   picks one student at random from those who submitted a data file, then one of that
+   student's main questions at random, and pays the student what their chosen option paid
+   in that question. README.md ("Payment") describes the draw. */
+
+/* the full explanation, one of the general instruction pages */
+function paymentPage(parts) {
+  return page('Instructions',
+    '<div class="pay-box">' +
+    '<h3>Payment Reminder</h3>' +
+    '<p>Payment is decided in two steps, after the deadline for submitting your data file:</p>' +
+    '<ol>' +
+    '<li><strong>One student is selected at random</strong> from everyone who completed ' +
+    'the experiment and submitted their data file. Every student has the same chance of ' +
+    'being selected.</li>' +
+    '<li><strong>One of that student&rsquo;s questions is selected at random.</strong> ' +
+    'Every question in the experiment has the same chance of being selected. Example ' +
+    'questions are never selected.</li>' +
+    '</ol>' +
+    '<p>The selected student is paid, in dollars, what the option they chose in the ' +
+    'selected question paid, given the number of red dots that were on the screen in that ' +
+    'question.</p>' +
+    '</div>' +
+    '<p>For example, imagine that you are the student who is selected. Further, imagine that the fourth ' +
+    'question you answered is the question selected. In that question you chose an option ' +
+    'that pays $40 if there are 49 red dots, and there were 49 red dots on the screen. You ' +
+    'would then be paid $40.</p>' +
+    '<p>You will not know which question has been selected until after the experiment, so ' +
+    'any question could be the one that counts. It is in your interest to treat every ' +
+    'question as if it is the one you will be paid for.</p>');
+}
+
+function practiceIntroPage(practice) {
+  return page('Instructions',
+    '<h3>Example Question</h3>' +
+    '<p>You will now have the chance to try an example question. You will not be paid ' +
+    'depending on your answer to this question &ndash; it is just for practice.</p>' +
+    '<p>You are about to see a screen with ' + N_DOTS + ' dots on it. These dots will be ' +
+    'either red or blue. The likelihood of the number of red dots is as follows:</p>' +
+    reminderHTML(practice) +
+    '<p>You will then be asked to choose between a number of alternatives. These ' +
+    'alternatives will pay different amounts of money depending on the number of red dots ' +
+    'on the screen.</p>');
+}
+
+/* Parts are named by letter in the order this student meets them: Part A, Part B, ... */
+function partLabel(k) {
+  return (k < 26) ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(k) : String(k + 1);
+}
+
+function buildTimeline(config) {
+  /* the order of the parts, for this student (block randomization if randomize_part_order),
+     then the order of the sections within each part */
+  var parts = config.randomize_part_order ?
+      jsPsych.randomization.shuffle(config.experiments) : config.experiments.slice();
+  var P = parts.length;
+  n_parts = P;
+
+  var orders = [];
+  var total_sections = 0;
+  for (var e = 0; e < P; e++) {
+    orders.push(parts[e].randomize_order ?
+        jsPsych.randomization.shuffle(parts[e].treatments) : parts[e].treatments.slice());
+    total_sections += parts[e].treatments.length;
+  }
+
+  /* the general instructions illustrate the options with the session's practice question,
+     or else with the practice question of the file's first experiment, or its first
+     treatment (file order, so the example does not change with the order of the parts) */
+  var first = config.experiments[0];
+  var example = config.practice || first.practice || first.treatments[0];
+  var ex_states = (example.states.length >= 2) ? example.states : [49, 51];
+
+  /* ---------------- welcome and general instructions (text follows appendix A0) -------- */
+
+  var welcome_block = {
+      type: "text",
+      text: page('Welcome',
+          '<p>Welcome to the experiment.</p>' +
+          '<p>Please use a laptop or desktop computer, and make your browser window as large ' +
+          'as possible.</p>' +
+          '<p>Press any key to continue.</p>')
+  };
+
+  var structure;
+  if (P === 1) {
+    structure = 'consists of ' + plural(total_sections, 'section') + '.';
+  } else {
+    var same = true, per_part = [];
+    for (var q = 0; q < P; q++) {
+      if (parts[q].treatments.length !== parts[0].treatments.length) { same = false; }
+      per_part.push('Part ' + partLabel(q) + ' has ' +
+                    plural(parts[q].treatments.length, 'section'));
+    }
+    structure = 'consists of ' + P + ' parts, ' + partLabel(0) + ' to ' + partLabel(P - 1) + '. ' +
+        (same ? 'Each part has ' + plural(parts[0].treatments.length, 'section') :
+                joinList(per_part)) + '.';
+  }
+
+  var instruction_pages = [
+    page('Instructions',
+      '<p>This experiment is designed to study decision making, and ' + structure + ' ' +
+      questionsPerSection(parts) + '</p>' +
+      '<p>Please complete the whole experiment in one sitting, somewhere quiet and free of ' +
+      'distractions.</p>' +
+      '<p>Please <strong>do NOT use the forward, back or refresh buttons in your browser</strong>. ' +
+      'Only use the buttons at the bottom of each page to move forward or back. If you leave or ' +
+      'reload the page, your answers will be lost and you will have to start again.</p>' +
+      '<p>We will start with a brief description of the main features of the experiment, and ' +
+      'you will be shown how to use the program.</p>'),
+
+    page('Instructions',
+      '<p>For each question you will be shown ' + N_DOTS + ' dots on a screen. Some of these ' +
+      'dots will be red, while some will be blue. Here is an example of such a screen:</p>' +
+      '<div class="dots-grid-wrap">' +
+      dots.dotsImageHTML(dots.randomLayout(example.states[drawState(example.prior)], N_DOTS)) +
+      '</div>' +
+      '<p>The number of red dots will be determined at random. You will be told how likely ' +
+      'each number of red dots is. So, for example you might be told that there is a 75% chance ' +
+      'of there being ' + ex_states[0] + ' red dots and a 25% chance of there being ' +
+      ex_states[1] + ' red dots. The number of red dots in each question is determined independently of the ' +
+      'number of red dots that have appeared in previous questions.</p>'),
+
+    page('Instructions',
+      '<p>You will be asked to make a choice between two or more options. Each of these ' +
+      'options will pay a different amount of money, in dollars, depending on how many ' +
+      'red dots are on the screen.</p>' +
+      optionsTableHTML(example) +
+      describeOptions(example)),
+
+    paymentPage(parts)
+  ];
+
+  var timeline = [welcome_block, uni_block];
+  section_order = [];
+  var trial_number = 0;
+
+  /* the session's practice question comes straight after the general instructions,
+     before the first part */
+  var lead_pages = instruction_pages;
+  if (config.practice) {
+    timeline.push(pagesBlock(lead_pages.concat([practiceIntroPage(config.practice)]), true));
+    timeline.push(makeQuestion(config.practice, 'Example Question',
+        {phase: 'practice', trial: 0}));
+    timeline.push(practicePaymentBlock(config.practice));
+    lead_pages = [];
+  }
+
+  for (var k = 0; k < P; k++) {
+    var ex = parts[k];
+    var order = orders[k];
+    var N = order.length;
+    var R = ex.reps;
+    var part_label = partLabel(k);
+
+    /* ---------------- the part's own instructions and practice question ----------------- */
+
+    var part_pages = [];
+    var intro = '';
+    if (P > 1) {
+      intro = (k > 0 ? '<p>You have finished Part ' + partLabel(k - 1) + '.</p>' : '') +
+              '<p>Part ' + part_label + ' of the experiment consists of ' + plural(N, 'section') +
+              (N === 1 ? ', with ' : ', each with ') + plural(R, 'question') + '.</p>';
+    }
+    if (ex.instructions) { intro += paragraphsHTML(ex.instructions); }
+    if (intro) {
+      part_pages.push(page(P > 1 ? 'Part ' + part_label : 'Instructions', intro));
+    }
+    if (ex.practice) { part_pages.push(practiceIntroPage(ex.practice)); }
+
+    /* the first part's pages follow on from the general instructions (unless the session's
+       practice question came in between), so that Previous can go back through all of them */
+    var pages = (k === 0) ? lead_pages.concat(part_pages) : part_pages;
+    if (pages.length > 0) { timeline.push(pagesBlock(pages, true)); }
+
+    if (ex.practice) {
+      timeline.push(makeQuestion(ex.practice, 'Example Question',
+          {experiment: ex.id, part: P > 1 ? part_label : 1, phase: 'practice', trial: 0}));
+      timeline.push(practicePaymentBlock(ex.practice));
+    }
+
+    /* ---------------- overview of the part's sections, in this student's order --------- */
+
+    var overview = '<p>Here is a description of the questions that you will face in ' +
+        (N === 1 ? 'the one section' : 'each of the ' + N + ' sections') + ' of ' +
+        (P > 1 ? 'this part of ' : '') + 'the experiment.</p>';
+    for (var j = 0; j < N; j++) {
+      overview +=
+        '<h3>Section ' + (j + 1) + '</h3>' +
+        reminderHTML(order[j]) +
+        '<p>You will be asked to choose between the following options:</p>' +
+        optionsTableHTML(order[j]);
+    }
+    if (ex.overview_note) {
+      var section_of = {};
+      for (var o = 0; o < N; o++) { section_of[order[o].id] = o + 1; }
+      overview += paragraphsHTML($.map(ex.overview_note, function(para) {
+        return para.replace(SECTION_PLACEHOLDER, function(whole, tid) { return section_of[tid]; });
+      }));
+    }
+    overview +=
+        '<p>Again, please <strong>do NOT use the forward, back or refresh buttons in your ' +
+        'browser</strong>. Only use the buttons at the bottom of each page.</p>' +
+        '<p>Click Next to begin Section 1' + (P > 1 ? ' of Part ' + part_label : '') + '.</p>';
+    timeline.push(pagesBlock([page(P > 1 ? 'Part ' + part_label + ' Instructions' : 'Instructions',
+                                   overview)], false));
+
+    /* ---------------- the sections ------------------------------------------------------ */
+
+    for (var b = 0; b < N; b++) {
+      var dp = order[b];
+      var title = (P > 1 ? 'Part ' + part_label + ', ' : '') + 'Section ' + (b + 1) + ' of ' + N;
+      timeline.push(pagesBlock([page(title,
+        (b > 0 ? '<p>You have finished Section ' + b + '.</p>' : '') +
+        '<p>' + (R === 1 ? 'The question in this section has these' :
+                           'All ' + R + ' questions in this section have the same') +
+        ' probabilities and options:</p>' +
+        reminderHTML(dp) +
+        optionsTableHTML(dp) +
+        '<p>Click Next to begin Section ' + (b + 1) + '.</p>')], false));
+
+      var questions = [];
+      for (var rep = 1; rep <= R; rep++) {
+        trial_number++;
+        questions.push(makeQuestion(dp, '',
+            {experiment: ex.id, part: P > 1 ? part_label : 1, phase: 'main',
+             trial: trial_number, block: b + 1, treatment: dp.id, rep: rep}));
+      }
+      timeline.push({timeline: questions});
+      section_order.push({part: P > 1 ? part_label : 1, block: b + 1});
+    }
+  }
+
+  /* Clicking Next here ends the experiment. timing_post_trial is 0 so that the download in
+     on_finish starts inside the click itself, which browsers are least likely to block. */
+  var finish_block = pagesBlock([page('All done',
+    '<p>You have completed ' + (total_sections === 1 ? 'the experiment' :
+                                'all ' + total_sections + ' sections of the experiment') + '.</p>' +
+    '<p>Click Next to finish the experiment and download your data file.</p>')], false);
+  finish_block.timing_post_trial = 0;
+  timeline.push(finish_block);
+
+  return timeline;
+}
+
+/* ==========================================================================================
+   DATA FILE
+   One row per question (each practice question, then the main questions, in the order
+   they were answered). The columns are described in README.md.
+   ========================================================================================== */
+
+var CSV_COLUMNS = ['uni_code', 'config', 'experiment', 'part', 'phase', 'trial', 'block',
+                   'treatment', 'rep', 'n_red', 'state', 'payoff_state', 'choice', 'correct',
+                   'payoff', 'rt', 'time_elapsed', 'session_start', 'dot_layout'];
+
+function csvCell(value) {
+  if (typeof value === 'undefined' || value === null) { return ''; }
+  var s = String(value);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function buildCSV() {
+  var rows = jsPsych.data.getTrialsOfType('dots-choice');
+  var lines = [CSV_COLUMNS.join(',')];
+  for (var r = 0; r < rows.length; r++) {
+    var cells = [];
+    for (var c = 0; c < CSV_COLUMNS.length; c++) {
+      cells.push(csvCell(rows[r][CSV_COLUMNS[c]]));
+    }
+    lines.push(cells.join(','));
+  }
+  return lines.join('\r\n') + '\r\n';
+}
+
+/* save `text` to the student's Downloads folder as `filename` */
+function downloadText(text, filename) {
+  var blob = new Blob([text], {type: 'text/csv;charset=utf-8'});
+  var url = (window.URL || window.webkitURL).createObjectURL(blob);
+  var link = $('<a>', {href: url, download: filename, css: {display: 'none'}, html: 'download'});
+  $('body').append(link);
+  link[0].click();
+  link.remove();
+}
+
+/* how often the student chose an option that paid the most, section by section, for the
+   end screen */
+function summaryHTML() {
+  var rows = jsPsych.data.getTrialsOfType('dots-choice');
+  var html = '<p>Here is how often you chose the option that paid the most, given the ' +
+             'actual number of red dots:</p>' +
+             '<table class="dots-summary"><tr>' + (n_parts > 1 ? '<th>Part</th>' : '') +
+             '<th>Section</th><th>Best choices</th></tr>';
+  for (var k = 0; k < section_order.length; k++) {
+    var sec = section_order[k];
+    var n = 0, best = 0;
+    for (var r = 0; r < rows.length; r++) {
+      if (rows[r].phase === 'main' && rows[r].part === sec.part && rows[r].block === sec.block) {
+        n++;
+        best += rows[r].correct;
+      }
+    }
+    html += '<tr>' + (n_parts > 1 ? '<td>' + sec.part + '</td>' : '') +
+            '<td>' + sec.block + '</td><td>' + best + ' of ' + n + '</td></tr>';
+  }
+  return html + '</table>';
+}
+
+/* ==========================================================================================
+   START: load the config file, check it, then run
+   ========================================================================================== */
+
+function runExperiment(config, config_path) {
+  jsPsych.data.addProperties({
+    config: config_path,
+    /* when the student started, so that a second attempt by the same UNI can be told apart */
+    session_start: (new Date()).toISOString()
+  });
+
+  jsPsych.init({
+    timeline: buildTimeline(config),
+    on_finish: function() {
+      window.removeEventListener('beforeunload', warnBeforeLeaving);
+
+      var display_element = jsPsych.getDisplayElement();
+      var filename = uni_code + '_exp2.csv';
+      var csv = buildCSV();
+
+      /* =====================================================================
+         TA: the submission details below are PLACEHOLDERS. Edit the text
+         between the two SUBMISSION INSTRUCTIONS markers. It is ordinary HTML
+         inside a JavaScript string, so keep the quoting style as it is: each
+         line wrapped in single quotes and joined to the next one with a +.
+         The bracketed ALL-CAPS items are the bits that need replacing.
+         ===================================================================== */
+      display_element.html(
+        '<div class="dots-page">' +
+        '<h2>Experiment complete</h2>' +
+        '<p>Thank you for taking part. Your data file <strong>' + filename + '</strong> has ' +
+        'been downloaded to your computer.</p>' +
+        summaryHTML() +
+        '<p>After the deadline, one student who submitted their data file will be selected ' +
+        'at random, and paid for one of their questions selected at random.</p>' +
+
+        /* ---------------- SUBMISSION INSTRUCTIONS: edit below ---------------- */
+        '<p>Please upload <strong>' + filename + '</strong> to Courseworks by ' +
+        '<strong>December 5</strong>. The file is in your browser&rsquo;s ' +
+        '<strong>Downloads</strong> folder. Please do not rename it.</p>' +
+        '<p>Questions? Contact Andrew Souther: ads2286 (at) columbia.edu.</p>' +
+        /* ---------------- SUBMISSION INSTRUCTIONS: edit above ---------------- */
+
+        '<p class="dots-small">If your download did not start, ' +
+        '<a href="#" id="download-again">click here to download your data file</a>.</p>' +
+        '</div>'
+      );
+
+      $('#download-again').click(function(e) {
+        e.preventDefault();
+        downloadText(csv, filename);
+      });
+
+      downloadText(csv, filename);
+    }
+  });
+}
+
+var chosen_config = chooseConfigFile();
+if (chosen_config.problem) {
+  showConfigProblems(chosen_config.path, [chosen_config.problem]);
+} else {
+  /* cache: false so that students always get the current version of the file */
+  $.ajax({url: chosen_config.path, dataType: 'json', cache: false})
+    .done(function(raw) {
+      var result = readConfig(raw);
+      if (result.problems.length > 0) {
+        showConfigProblems(chosen_config.path, result.problems);
+        return;
+      }
+      var chosen = chooseExperiments(result.config.experiments);
+      if (chosen.problem) {
+        showConfigProblems(chosen_config.path, [chosen.problem]);
+        return;
+      }
+      result.config.experiments = chosen.experiments;
+      runExperiment(result.config, chosen_config.path);
+    })
+    .fail(function(xhr, status, err) {
+      var why;
+      if (status === 'parsererror') {
+        why = 'The file is not valid JSON (' + escapeHTML(String(err)) + '). Look for a ' +
+              'missing or extra comma, bracket, brace or quotation mark near that point.';
+      } else if (window.location.protocol === 'file:') {
+        why = 'This page was opened straight from your computer (its address starts with ' +
+              'file://), and browsers do not let such a page read the config file. To test ' +
+              'the experiment on your own computer, start a local web server in the ' +
+              'econ-4850-exp2 folder, e.g. with <code>python -m http.server 8000</code>, and ' +
+              'open <code>http://localhost:8000/</code>.';
+      } else if (xhr.status === 404) {
+        why = 'The file was not found. Check the file name and folder.';
+      } else {
+        why = 'The file could not be loaded (' + escapeHTML(status) +
+              (xhr.status ? ', HTTP status ' + xhr.status : '') + ').';
+      }
+      showConfigProblems(chosen_config.path, [why]);
+    });
+}
+
+  </script>
+  </body>
+</html>
