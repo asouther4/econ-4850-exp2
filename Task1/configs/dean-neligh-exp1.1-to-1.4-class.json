@@ -1,26 +1,26 @@
 {
-  "_about": "Classroom version of Dean & Neligh (2023), experiments 1.1 to 1.4, run as Parts A-D of one session, in a random order for each student: 2 + 3 + 3 + 1 = 9 decision problems (DPs). Payoffs are dollars. Only one student is paid: after the deadline one student is drawn at random, then one of their main questions, and they are paid what their chosen option paid in it. reps_per_treatment is 2 in every part, for testing; raise it for the real run. Add &experiment=exp1.1 (etc.) to the address to run only some parts. Settings whose names start with an underscore, like this one, are notes and are ignored.",
+  "_about": "Classroom version of Dean & Neligh (2023), experiments 1.1 to 1.4, run as Parts A-D of one session, in a random order for each student: 2 + 3 + 3 + 1 = 9 decision problems (DPs). Payoffs are dollars. Experiments 1.1 and 1.2 were paid in probability points in the paper; their payoffs here are $40 x points / 100 (the expected value of the points with a $40 prize), rounded to whole dollars, so the largest payoff is $40. Experiments 1.3 and 1.4 were paid $10 in cash in the paper, and pay $10 here. Only one student is paid: after the deadline one student is drawn at random, then one of their main questions, and they are paid what their chosen option paid in it. reps_per_treatment is 2 in every part, for testing; raise it for the real run. Add &experiment=exp1.1 (etc.) to the address to run only some parts. Settings whose names start with an underscore, like this one, are notes and are ignored.",
 
   "_about_randomize_part_order": "true: each student gets the four parts in a random order, and the sections within each part in a random order (each part's randomize_order). Parts are labelled A, B, C, D in the order the student meets them; the data file's experiment column says which experiment each row is from.",
   "randomize_part_order": true,
 
-  "_about_practice": "The unpaid example question of appendix A0 (A 10/0, B 0/10, C 5/5 with 49 or 51 red dots). It comes after the general instructions and before Part A, whatever the order of the parts.",
+  "_about_practice": "The unpaid example question of appendix A0 (A 10/0, B 0/10, C 5/5 points with 49 or 51 red dots; $4/$0, $0/$4, $2/$2 here). It comes after the general instructions and before Part A, whatever the order of the parts.",
   "_about_overview_note": "Each experiment's overview_note is shown in bold at the bottom of the page listing its sections (the Part X Instructions page). They all follow one pattern: what the sections have in common, then what differs. {section:DP3} becomes the number of DP3's section in each student's (randomized) order.",
 
   "practice": {
     "states": [49, 51],
     "prior": [0.5, 0.5],
     "actions": [
-      {"label": "A", "payoffs": {"49": 10, "51": 0}},
-      {"label": "B", "payoffs": {"49": 0, "51": 10}},
-      {"label": "C", "payoffs": {"49": 5, "51": 5}}
+      {"label": "A", "payoffs": {"49": 4, "51": 0}},
+      {"label": "B", "payoffs": {"49": 0, "51": 4}},
+      {"label": "C", "payoffs": {"49": 2, "51": 2}}
     ]
   },
 
   "experiments": [
     {
       "id": "exp1.1",
-      "_about": "Experiment 1.1 (section III.B and table 1 of the paper), both DPs. Two equally likely states, 49 and 51 red dots. DP1 = {a, b}: a pays 50 in both states, b pays b1 = 30 with 49 red dots and b2 = 52 with 51. DP2 = {a, b, c} adds c, which pays 100 with 49 red dots and 0 with 51. The paper ran four between-subject values of (b1, b2); this uses its treatment 4, (30, 52), which had the strongest aggregate monotonicity violation in table 2. The paper's probability points are read as dollars.",
+      "_about": "Experiment 1.1 (section III.B and table 1 of the paper), both DPs. Two equally likely states, 49 and 51 red dots. In the paper's probability points: DP1 = {a, b}: a pays 50 in both states, b pays b1 = 30 with 49 red dots and b2 = 52 with 51. DP2 = {a, b, c} adds c, which pays 100 with 49 red dots and 0 with 51. The paper ran four between-subject values of (b1, b2); this uses its treatment 4, (30, 52), which had the strongest aggregate monotonicity violation in table 2. In dollars ($40 x points / 100, rounded): a $20/$20, b $12/$21 (52 points is $20.80; $21 keeps b2 just above a), c $40/$0.",
       "n_treatments": 2,
       "reps_per_treatment": 2,
       "randomize_order": true,
@@ -30,7 +30,7 @@
         "The sections in this part differ in which options you can choose from."
       ],
 
-      "overview_note": "**As you can see, both sections have the same probabilities (49 or 51 red dots, each equally likely) and the same options A and B. The only difference is that Section {section:DP2} also has a third option, C, which pays $100 if there are 49 red dots and $0 if there are 51 red dots.**",
+      "overview_note": "**As you can see, both sections have the same probabilities (49 or 51 red dots, each equally likely) and the same options A and B. The only difference is that Section {section:DP2} also has a third option, C, which pays $40 if there are 49 red dots and $0 if there are 51 red dots.**",
 
       "treatments": [
         {
@@ -38,8 +38,8 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 50, "51": 50}},
-            {"label": "B", "payoffs": {"49": 30, "51": 52}}
+            {"label": "A", "payoffs": {"49": 20, "51": 20}},
+            {"label": "B", "payoffs": {"49": 12, "51": 21}}
           ]
         },
         {
@@ -47,9 +47,9 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 50, "51": 50}},
-            {"label": "B", "payoffs": {"49": 30, "51": 52}},
-            {"label": "C", "payoffs": {"49": 100, "51": 0}}
+            {"label": "A", "payoffs": {"49": 20, "51": 20}},
+            {"label": "B", "payoffs": {"49": 12, "51": 21}},
+            {"label": "C", "payoffs": {"49": 40, "51": 0}}
           ]
         }
       ]
@@ -57,7 +57,7 @@
 
     {
       "id": "exp1.2",
-      "_about": "Experiment 1.2 (section III.C), with three of its four reward levels. Two equally likely states, 49 and 51 red dots; A pays R with 49 red dots and B pays R with 51, R = $5, $40 and $90. Treatment ids follow the paper's DP numbers for those rewards (DP3 = 5, DP4 = 40, DP6 = 90); DP5 (75) is dropped. Section III.C gives the rewards as 5, 40, 75, 90 (equation 2 and appendix A0 use 70 and 95); the top reward here is 90, as in section III.C.",
+      "_about": "Experiment 1.2 (section III.C), with three of its four reward levels. Two equally likely states, 49 and 51 red dots; A pays R with 49 red dots and B pays R with 51, R = 5, 40 and 90 probability points in the paper, so $2, $16 and $36 here ($40 x points / 100). Treatment ids follow the paper's DP numbers for those rewards (DP3 = 5, DP4 = 40, DP6 = 90); DP5 (75) is dropped. Section III.C gives the rewards as 5, 40, 75, 90 (equation 2 and appendix A0 use 70 and 95); the top reward here is 90, as in section III.C.",
       "n_treatments": 3,
       "reps_per_treatment": 2,
       "randomize_order": true,
@@ -67,7 +67,7 @@
         "In every section, one option pays if there are 49 red dots and the other pays if there are 51 red dots. The sections differ only in **how much** the options pay."
       ],
 
-      "overview_note": "**As you can see, all 3 sections have the same probabilities (49 or 51 red dots, each equally likely) and the same two options: one pays if there are 49 red dots and the other pays if there are 51 red dots. The sections differ only in how much the options pay: $5 in Section {section:DP3}, $40 in Section {section:DP4} and $90 in Section {section:DP6}.**",
+      "overview_note": "**As you can see, all 3 sections have the same probabilities (49 or 51 red dots, each equally likely) and the same two options: one pays if there are 49 red dots and the other pays if there are 51 red dots. The sections differ only in how much the options pay: $2 in Section {section:DP3}, $16 in Section {section:DP4} and $36 in Section {section:DP6}.**",
 
       "treatments": [
         {
@@ -75,8 +75,8 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 5, "51": 0}},
-            {"label": "B", "payoffs": {"49": 0, "51": 5}}
+            {"label": "A", "payoffs": {"49": 2, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 2}}
           ]
         },
         {
@@ -84,8 +84,8 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 40, "51": 0}},
-            {"label": "B", "payoffs": {"49": 0, "51": 40}}
+            {"label": "A", "payoffs": {"49": 16, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 16}}
           ]
         },
         {
@@ -93,8 +93,8 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 90, "51": 0}},
-            {"label": "B", "payoffs": {"49": 0, "51": 90}}
+            {"label": "A", "payoffs": {"49": 36, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 36}}
           ]
         }
       ]

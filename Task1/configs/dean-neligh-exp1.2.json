@@ -1,5 +1,5 @@
 {
-  "_about": "Dean & Neligh (2023), experiment 1.2 (Changing Incentives), with 10 questions per treatment instead of 50. Treatment ids follow the paper's numbering of the decision problems (DPs 3-6). Payoffs are dollars ($5, $40, $70, $95: the paper's probability points, read as dollars), and only one student is paid: one student is drawn at random, then one of their main questions. Settings whose names start with an underscore, like this one, are notes and are ignored.",
+  "_about": "Dean & Neligh (2023), experiment 1.2 (Changing Incentives), with 10 questions per treatment instead of 50. Treatment ids follow the paper's numbering of the decision problems (DPs 3-6). Payoffs are dollars: the paper's 5, 40, 70 and 95 probability points are $2, $16, $28 and $38 here ($40 x points / 100, the expected value with the paper's $40 prize), and the practice question's 10/0, 5/5 points are $4/$0, $2/$2, and only one student is paid: one student is drawn at random, then one of their main questions. Settings whose names start with an underscore, like this one, are notes and are ignored.",
 
   "n_treatments": 4,
   "reps_per_treatment": 10,
@@ -9,9 +9,9 @@
     "states": [49, 51],
     "prior": [0.5, 0.5],
     "actions": [
-      {"label": "A", "payoffs": {"49": 10, "51": 0}},
-      {"label": "B", "payoffs": {"49": 0, "51": 10}},
-      {"label": "C", "payoffs": {"49": 5, "51": 5}}
+      {"label": "A", "payoffs": {"49": 4, "51": 0}},
+      {"label": "B", "payoffs": {"49": 0, "51": 4}},
+      {"label": "C", "payoffs": {"49": 2, "51": 2}}
     ]
   },
 
@@ -21,8 +21,8 @@
       "states": [49, 51],
       "prior": [0.5, 0.5],
       "actions": [
-        {"label": "A", "payoffs": {"49": 5, "51": 0}},
-        {"label": "B", "payoffs": {"49": 0, "51": 5}}
+        {"label": "A", "payoffs": {"49": 2, "51": 0}},
+        {"label": "B", "payoffs": {"49": 0, "51": 2}}
       ]
     },
     {
@@ -30,8 +30,8 @@
       "states": [49, 51],
       "prior": [0.5, 0.5],
       "actions": [
-        {"label": "A", "payoffs": {"49": 40, "51": 0}},
-        {"label": "B", "payoffs": {"49": 0, "51": 40}}
+        {"label": "A", "payoffs": {"49": 16, "51": 0}},
+        {"label": "B", "payoffs": {"49": 0, "51": 16}}
       ]
     },
     {
@@ -39,8 +39,8 @@
       "states": [49, 51],
       "prior": [0.5, 0.5],
       "actions": [
-        {"label": "A", "payoffs": {"49": 70, "51": 0}},
-        {"label": "B", "payoffs": {"49": 0, "51": 70}}
+        {"label": "A", "payoffs": {"49": 28, "51": 0}},
+        {"label": "B", "payoffs": {"49": 0, "51": 28}}
       ]
     },
     {
@@ -48,8 +48,8 @@
       "states": [49, 51],
       "prior": [0.5, 0.5],
       "actions": [
-        {"label": "A", "payoffs": {"49": 95, "51": 0}},
-        {"label": "B", "payoffs": {"49": 0, "51": 95}}
+        {"label": "A", "payoffs": {"49": 38, "51": 0}},
+        {"label": "B", "payoffs": {"49": 0, "51": 38}}
       ]
     }
   ]

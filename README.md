@@ -30,8 +30,8 @@ you change the experiment by editing or swapping that file. Three are included:
 | `configs/dean-neligh-exp1.2-and-1.4.json` | Experiments 1.2 (all four DPs) and 1.4 (all four DPs) as Parts A and B (in that order), with 2 questions per DP. |
 | `configs/dean-neligh-exp1.2.json` | Experiment 1.2 only (all four DPs), with 10 questions per DP. |
 
-All three use dollar payoffs. The two older files were written for probability points with a
-prize; they have been converted, so their payoffs (up to $95) are now read as dollars.
+All three use dollar payoffs, at most $40 (see [Payoff levels](#payoff-levels)). The two older
+files were written for probability points with a prize; they have been converted the same way.
 
 ## The config file
 
@@ -172,8 +172,16 @@ page.
 ## The default design: experiments 1.1 to 1.4
 
 `configs/dean-neligh-exp1.1-to-1.4-class.json` runs a shortened version of all four of the
-paper's "experiment 1" designs as four parts of one session. The paper's probability points
-are read as dollars. Treatment ids follow the paper's DP numbers.
+paper's "experiment 1" designs as four parts of one session. Treatment ids follow the paper's
+DP numbers.
+
+<a id="payoff-levels"></a>**Payoff levels.** Payoffs are dollars, and the largest is $40, the
+maximum the landing page promises. The paper paid experiments 1.1 and 1.2 in probability points
+(with a $20 and a $40 prize). Here those payoffs are **$40 × points / 100**, the expected value
+of the points with a $40 prize, rounded to whole dollars. So 1.2's rewards of 5, 40 and 90 points
+become $2, $16 and $36, and in 1.1 a sure 50 points becomes $20. (For experiment 1.1 the paper's
+prize was $20, so its stakes here are about twice the paper's in expected value.) Experiments 1.3
+and 1.4 were paid $10 in cash in the paper, and pay $10 here.
 
 **Order.** The order of the four parts is random for each student, and so is the order of the
 sections within each part (block randomization at both levels; the paper block randomized the
@@ -184,10 +192,11 @@ the data file's `experiment` column, not `part`, to tell the experiments apart.
 **Overview notes.** Each part's "Part X Instructions" page, which lists its sections, ends with
 a bold note (`overview_note`) that restates the part's design in one pattern: "As you can see,
 all 3 sections have the same …" followed by what differs, with section numbers in the student's
-own order (e.g. "$5 in Section 2, $40 in Section 3 and $90 in Section 1").
+own order (e.g. "$2 in Section 2, $16 in Section 3 and $36 in Section 1").
 
 **Practice question.** After the general instructions and before Part A, every student
-answers one unpaid example question, the A $10/$0, B $0/$10, C $5/$5 example of appendix A0
+answers one unpaid example question, the A/B/C example of appendix A0 (10/0, 0/10 and 5/5
+points, so $4/$0, $0/$4 and $2/$2)
 (49 or 51 red dots, equally likely). It is the config's top-level `practice`. None of the
 parts has a practice question of its own.
 
@@ -196,21 +205,22 @@ Two equally likely states, 49 and 51 red dots.
 
 | Treatment `id` | A (49 / 51) | B (49 / 51) | C (49 / 51) |
 |----------------|-------------|-------------|-------------|
-| DP1            | $50 / $50   | $30 / $52   | —           |
-| DP2            | $50 / $50   | $30 / $52   | $100 / $0   |
+| DP1            | $20 / $20   | $12 / $21   | —           |
+| DP2            | $20 / $20   | $12 / $21   | $40 / $0    |
 
-The paper ran four between-subject values of b's payoffs, (40, 55), (40, 52), (30, 55) and
-(30, 52). This uses (30, 52), its treatment 4, which had the strongest aggregate violation of
-monotonicity in table 2.
+In the paper's points these are a = 50/50, b = 30/52 and c = 100/0. The paper ran four
+between-subject values of b's payoffs, (40, 55), (40, 52), (30, 55) and (30, 52). This uses
+(30, 52), its treatment 4, which had the strongest aggregate violation of monotonicity in
+table 2. 52 points is $20.80; it is rounded to $21, which keeps b2 just above a's $20.
 
 **Experiment 1.2 (changing incentives), section III.C.** Three of the four DPs. Two
 equally likely states, 49 and 51 red dots; A pays R with 49 red dots, B pays R with 51.
 
-| Treatment `id` | R   |
-|----------------|-----|
-| DP3            | $5  |
-| DP4            | $40 |
-| DP6            | $90 |
+| Treatment `id` | R (paper, points) | R (here) |
+|----------------|-------------------|----------|
+| DP3            | 5                 | $2       |
+| DP4            | 40                | $16      |
+| DP6            | 90                | $36      |
 
 The paper's DP5 (75) is dropped. Section III.C lists the rewards as 5, 40, 75 and 90, while
 equation (2), section IV.B and appendix A0 use 5, 40, 70 and 95. This design uses section
@@ -260,8 +270,8 @@ Other differences from the paper:
 
 ## The older configs
 
-`dean-neligh-exp1.2-and-1.4.json` runs all four DPs of experiment 1.2 (R = $5, $40, $70, $95,
-the values of equation 2 and appendix A0) as Part A and all four of experiment 1.4 as Part B,
+`dean-neligh-exp1.2-and-1.4.json` runs all four DPs of experiment 1.2 (R = 5, 40, 70 and 95
+points, the values of equation 2 and appendix A0, so $2, $16, $28 and $38) as Part A and all four of experiment 1.4 as Part B,
 always in that order (it does not set `randomize_part_order`):
 
 | Treatment `id` | N  | Red dots | `low`   | `high`  |
@@ -273,7 +283,8 @@ always in that order (it does not set `randomize_part_order`):
 
 with A and B paying $10. `dean-neligh-exp1.2.json` runs experiment 1.2 alone. Both were
 originally written in probability points with a $40 prize (and 25 points for experiment 1.4);
-they now use the same dollar payoffs and one-student payment as the default.
+they now use dollar payoffs on the same scale as the default, and the same one-student
+payment.
 
 ## Files
 

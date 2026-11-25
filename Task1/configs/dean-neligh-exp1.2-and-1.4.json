@@ -4,7 +4,7 @@
   "experiments": [
     {
       "id": "exp1.2",
-      "_about": "Experiment 1.2. Two equally likely states, 49 and 51 red dots; action A pays R with 49 red dots and B pays R with 51. Treatment ids follow the paper's numbering of the decision problems (DPs 3-6), with R = $5, $40, $70 and $95 (the paper's probability points, read as dollars). Every number of red dots is its own payoff-relevant state, so there are no payoff_states and the payoffs are keyed by the number of red dots.",
+      "_about": "Experiment 1.2. Two equally likely states, 49 and 51 red dots; action A pays R with 49 red dots and B pays R with 51. Treatment ids follow the paper's numbering of the decision problems (DPs 3-6), with R = 5, 40, 70 and 95 probability points in the paper, so $2, $16, $28 and $38 here ($40 x points / 100, the expected value with the paper's $40 prize). The practice question's 10/0, 5/5 points are $4/$0, $2/$2. Every number of red dots is its own payoff-relevant state, so there are no payoff_states and the payoffs are keyed by the number of red dots.",
       "n_treatments": 4,
       "reps_per_treatment": 2,
       "randomize_order": true,
@@ -13,9 +13,9 @@
         "states": [49, 51],
         "prior": [0.5, 0.5],
         "actions": [
-          {"label": "A", "payoffs": {"49": 10, "51": 0}},
-          {"label": "B", "payoffs": {"49": 0, "51": 10}},
-          {"label": "C", "payoffs": {"49": 5, "51": 5}}
+          {"label": "A", "payoffs": {"49": 4, "51": 0}},
+          {"label": "B", "payoffs": {"49": 0, "51": 4}},
+          {"label": "C", "payoffs": {"49": 2, "51": 2}}
         ]
       },
 
@@ -25,8 +25,8 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 5, "51": 0}},
-            {"label": "B", "payoffs": {"49": 0, "51": 5}}
+            {"label": "A", "payoffs": {"49": 2, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 2}}
           ]
         },
         {
@@ -34,8 +34,8 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 40, "51": 0}},
-            {"label": "B", "payoffs": {"49": 0, "51": 40}}
+            {"label": "A", "payoffs": {"49": 16, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 16}}
           ]
         },
         {
@@ -43,8 +43,8 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 70, "51": 0}},
-            {"label": "B", "payoffs": {"49": 0, "51": 70}}
+            {"label": "A", "payoffs": {"49": 28, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 28}}
           ]
         },
         {
@@ -52,8 +52,8 @@
           "states": [49, 51],
           "prior": [0.5, 0.5],
           "actions": [
-            {"label": "A", "payoffs": {"49": 95, "51": 0}},
-            {"label": "B", "payoffs": {"49": 0, "51": 95}}
+            {"label": "A", "payoffs": {"49": 38, "51": 0}},
+            {"label": "B", "payoffs": {"49": 0, "51": 38}}
           ]
         }
       ]
